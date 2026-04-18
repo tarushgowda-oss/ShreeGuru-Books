@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShreeGuru Books</title>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<style>
+body{font-family:Arial;background:#0b0f1a;color:#fff;margin:0}
+header{background:#020617;padding:15px 30px;display:flex;justify-content:space-between}
+nav span{margin-left:15px;cursor:pointer}
+.container{padding:20px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px}
+.card{background:#1e293b;border-radius:10px;overflow:hidden}
+.card img{width:100%;height:250px;object-fit:cover}
+.card-content{padding:15px}
+button{padding:8px;border:none;border-radius:5px;cursor:pointer}
+.cart-btn{background:#22c55e}
+.buy-btn{background:#3b82f6;color:white}
+.hidden{display:none}
+input,textarea{width:100%;padding:8px;margin:5px 0}
+</style>
+</head>
+
+<body>
+
+<header>
+<h2>📚 ShreeGuru Books</h2>
+<nav>
+<span onclick="showShop()">Shop</span>
+<span onclick="showCart()">Cart (<span id="count">0</span>)</span>
+<span onclick="showLogin()">Admin</span>
+</nav>
+</header>
+
+<!-- SHOP -->
+<div class="container" id="shop">
+<div class="grid">
+
+<div class="card">
+<img src="https://i.ibb.co/JWB0dTRn/Screenshot-2026-04-16-122257.png">
+<div class="card-content">
+<h3>Empire Of Football</h3>
+<p>Football mindset and power.</p>
+<p>₹470</p>
+<input type="number" value="1" id="q1">
+<button class="cart-btn" onclick="addCart('Empire Of Football',470,'q1')">Add</button>
+</div>
+</div>
+
+<div class="card">
+<img src="https://i.ibb.co/JWB0dTRn/Screenshot-2026-04-16-122257.png">
+<div class="card-content">
+<h3>Weapon 1: Rise Before Ruin</h3>
+<p>Strategy and survival.</p>
+<p>₹470</p>
+<input type="number" value="1" id="q2">
+<button class="cart-btn" onclick="addCart('Weapon 1',470,'q2')">Add</button>
+</div>
+</div>
+
+</div>
+</div>
+
+<!-- CART -->
+<div class="container hidden" id="cartPage">
+<h2>Your Cart</h2>
+<ul id="cartList"></ul>
+<h3 id="total"></h3>
+
+<h3>Customer Details</h3>
+<input id="name" placeholder="Name">
+<input id="phone" placeholder="Phone">
+<input id="email" placeholder="Email">
+<textarea id="address" placeholder="Address"></textarea>
+<input id="human" placeholder="Type YES">
+
+<button class="buy-btn" onclick="payNow()">Pay Now</button>
+</div>
+
+<!-- LOGIN -->
+<div class="container hidden" id="loginPage">
+<h3>Admin Login</h3>
+<input id="adminUser" placeholder="Email">
+<input id="adminPass" type="password" placeholder="Password">
+<button onclick="login()">Login</button>
+</div>
+
+<!-- ADMIN -->
+<div class="container hidden" id="adminPage">
+<h3>Orders</h3>
+<ul id="orders"></ul>
+<button onclick="logout()">Logout</button>
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+// 🔥 YOUR FIREBASE CONFIG
+const firebaseConfig = {
+  apiKey: "AIzaSyD8twHB8Hn4ssqvVwVDMQinJ-m_Iyfrqh4",
+  authDomain: "shreegurubooks-cbca0.firebaseapp.com",
+  projectId: "shreegurubooks-cbca0",
+  storageBucket: "shreegurubooks-cbca0.firebasestorage.app",
+  messagingSenderId: "924681533835",
+  appId: "1:924681533835:web:4fe2a7b4b60974625dd78e"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+// CART
+let cart = JSON.parse(localStorage.getItem('cart')) || [];
+updateCount();
+
+window.addCart = function(name,price,id){
+let qty=parseInt(document.getElementById(id).value);
+cart.push({name,price,qty});
+save();
+alert("Added to cart");
+};
+
+function save(){
+localStorage.setItem('cart',JSON.stringify(cart));
+updateCount();
+}
+
+function updateCount(){
+document.getElementById('count').innerText=cart.length;
+}
+
+// NAV
+window.showCart=()=>{
+document.getElementById('shop').classList.add('hidden');
+document.getElementById('cartPage').classList.remove('hidden');
+renderCart();
+}
+
+window.showShop=()=>location.reload();
+
+window.showLogin=()=>{
+document.getElementById('shop').classList.add('hidden');
+document.getElementById('loginPage').classList.remove('hidden');
+}
+
+// CART RENDER
+function renderCart(){
+let list=document.getElementById('cartList');
+list.innerHTML="";
+let total=0;
+
+cart.forEach(i=>{
+list.innerHTML+=`<li>${i.name} x ${i.qty}</li>`;
+total+=i.price*i.qty;
+});
+
+document.getElementById('total').innerText="Total ₹"+total;
+}
+
+// PAYMENT
+window.payNow = async function(){
+
+let name=document.getElementById("name").value;
+let phone=document.getElementById("phone").value;
+let email=document.getElementById("email").value;
+let address=document.getElementById("address").value;
+let human=document.getElementById("human").value;
+
+if(!name||!phone||!email||!address){
+alert("Fill all details"); return;
+}
+if(human.toLowerCase()!=="yes"){
+alert("Type YES"); return;
+}
+
+var options={
+key:"YOUR_RAZORPAY_KEY",
+amount:cart.reduce((t,i)=>t+i.price*i.qty,0)*100,
+currency:"INR",
+name:"ShreeGuru Books",
+
+handler: async function(res){
+
+await addDoc(collection(db,"orders"),{
+name,phone,email,address,
+items:cart,
+paymentId:res.razorpay_payment_id
+});
+
+let msg=`Order Confirmed\nName:${name}\nPhone:${phone}`;
+window.open(`https://wa.me/919886447999?text=${encodeURIComponent(msg)}`);
+
+alert("Order placed");
+
+cart=[];
+save();
+location.reload();
+}
+};
+
+new Razorpay(options).open();
+};
+
+// LOGIN
+window.login=async ()=>{
+try{
+await signInWithEmailAndPassword(auth,
+document.getElementById("adminUser").value,
+document.getElementById("adminPass").value
+);
+}catch(e){alert("Login failed");}
+};
+
+// ADMIN LOAD
+onAuthStateChanged(auth, async (user)=>{
+if(user){
+document.getElementById('loginPage').classList.add('hidden');
+document.getElementById('adminPage').classList.remove('hidden');
+
+let list=document.getElementById('orders');
+list.innerHTML="";
+
+const snap=await getDocs(collection(db,"orders"));
+snap.forEach(doc=>{
+let o=doc.data();
+list.innerHTML+=`<li>${o.name} - ${o.phone} - ${o.paymentId}</li>`;
+});
+}
+});
+
+// LOGOUT
+window.logout=()=>signOut(auth);
+
+</script>
+
+</body>
+</html>
