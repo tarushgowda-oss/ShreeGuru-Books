@@ -13,12 +13,11 @@ header{background:#020617;padding:15px 30px;display:flex;justify-content:space-b
 nav span{margin-left:15px;cursor:pointer}
 .container{padding:20px}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px}
-.card{background:#1e293b;border-radius:10px;overflow:hidden}
-.card img{width:100%;height:250px;object-fit:cover}
-.card-content{padding:15px}
+.card{background:#1e293b;border-radius:10px;padding:15px}
 button{padding:8px;border:none;border-radius:5px;cursor:pointer}
 .cart-btn{background:#22c55e}
 .buy-btn{background:#3b82f6;color:white}
+.remove-btn{background:red;color:white;margin-left:10px}
 .hidden{display:none}
 input,textarea{width:100%;padding:8px;margin:5px 0}
 </style>
@@ -40,25 +39,19 @@ input,textarea{width:100%;padding:8px;margin:5px 0}
 <div class="grid">
 
 <div class="card">
-<img src="https://i.ibb.co/JWB0dTRn/Screenshot-2026-04-16-122257.png">
-<div class="card-content">
 <h3>Empire Of Football</h3>
 <p>Football mindset and power.</p>
 <p>₹470</p>
 <input type="number" value="1" id="q1">
 <button class="cart-btn" onclick="addCart('Empire Of Football',470,'q1')">Add</button>
 </div>
-</div>
 
 <div class="card">
-<img src="https://i.ibb.co/JWB0dTRn/Screenshot-2026-04-16-122257.png">
-<div class="card-content">
 <h3>Weapon 1: Rise Before Ruin</h3>
 <p>Strategy and survival.</p>
 <p>₹470</p>
 <input type="number" value="1" id="q2">
-<button class="cart-btn" onclick="addCart('Weapon 1',470,'q2')">Add</button>
-</div>
+<button class="cart-btn" onclick="addCart('Weapon 1: Rise Before Ruin',470,'q2')">Add</button>
 </div>
 
 </div>
@@ -101,7 +94,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-// 🔥 YOUR FIREBASE CONFIG
+// FIREBASE CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyD8twHB8Hn4ssqvVwVDMQinJ-m_Iyfrqh4",
   authDomain: "shreegurubooks-cbca0.firebaseapp.com",
@@ -140,14 +133,14 @@ window.showCart=()=>{
 document.getElementById('shop').classList.add('hidden');
 document.getElementById('cartPage').classList.remove('hidden');
 renderCart();
-}
+};
 
 window.showShop=()=>location.reload();
 
 window.showLogin=()=>{
 document.getElementById('shop').classList.add('hidden');
 document.getElementById('loginPage').classList.remove('hidden');
-}
+};
 
 // CART RENDER
 function renderCart(){
@@ -155,16 +148,27 @@ let list=document.getElementById('cartList');
 list.innerHTML="";
 let total=0;
 
-cart.forEach(i=>{
-list.innerHTML+=`<li>${i.name} x ${i.qty}</li>`;
-total+=i.price*i.qty;
+cart.forEach((item,index)=>{
+list.innerHTML+=`
+<li>
+${item.name} x ${item.qty}
+<button class="remove-btn" onclick="removeItem(${index})">Remove</button>
+</li>`;
+total+=item.price*item.qty;
 });
 
 document.getElementById('total').innerText="Total ₹"+total;
 }
 
-// PAYMENT
-window.payNow = async function(){
+// REMOVE
+window.removeItem=function(index){
+cart.splice(index,1);
+save();
+renderCart();
+};
+
+// PAYMENT + WHATSAPP FULL DETAILS
+window.payNow=async function(){
 
 let name=document.getElementById("name").value;
 let phone=document.getElementById("phone").value;
@@ -179,9 +183,11 @@ if(human.toLowerCase()!=="yes"){
 alert("Type YES"); return;
 }
 
+let totalAmount = cart.reduce((t,i)=>t+i.price*i.qty,0);
+
 var options={
 key:"rzp_live_SewkzVVKnvjFTI",
-amount:cart.reduce((t,i)=>t+i.price*i.qty,0)*100,
+amount: totalAmount * 100,
 currency:"INR",
 name:"ShreeGuru Books",
 
@@ -190,13 +196,30 @@ handler: async function(res){
 await addDoc(collection(db,"orders"),{
 name,phone,email,address,
 items:cart,
+total: totalAmount,
 paymentId:res.razorpay_payment_id
 });
 
-let msg=`Order Confirmed\nName:${name}\nPhone:${phone}`;
-window.open(`https://wa.me/919886447999?text=${encodeURIComponent(msg)}`);
+// 📲 WhatsApp message
+let orderDetails = cart.map(i => `${i.name} x ${i.qty}`).join("%0A");
 
-alert("Order placed");
+let msg = `📚 *ShreeGuru Books Order*%0A
+------------------------%0A
+👤 Name: ${name}%0A
+📞 Phone: ${phone}%0A
+📧 Email: ${email}%0A
+🏠 Address: ${address}%0A
+------------------------%0A
+📦 Items:%0A${orderDetails}%0A
+------------------------%0A
+💰 Total: ₹${totalAmount}%0A
+🧾 Payment ID: ${res.razorpay_payment_id}%0A
+------------------------%0A
+✅ Payment Completed`;
+
+window.open(`https://wa.me/919886447999?text=${msg}`);
+
+alert("Order placed successfully!");
 
 cart=[];
 save();
@@ -217,7 +240,7 @@ document.getElementById("adminPass").value
 }catch(e){alert("Login failed");}
 };
 
-// ADMIN LOAD
+// ADMIN
 onAuthStateChanged(auth, async (user)=>{
 if(user){
 document.getElementById('loginPage').classList.add('hidden');
@@ -229,7 +252,7 @@ list.innerHTML="";
 const snap=await getDocs(collection(db,"orders"));
 snap.forEach(doc=>{
 let o=doc.data();
-list.innerHTML+=`<li>${o.name} - ${o.phone} - ${o.paymentId}</li>`;
+list.innerHTML+=`<li>${o.name} - ₹${o.total} - ${o.paymentId}</li>`;
 });
 }
 });
