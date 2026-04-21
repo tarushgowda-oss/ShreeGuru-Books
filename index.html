@@ -12,7 +12,7 @@ body{font-family:Arial;background:#0b0f1a;color:#fff;margin:0}
 header{background:#020617;padding:15px 30px;display:flex;justify-content:space-between}
 nav span{margin-left:15px;cursor:pointer}
 .container{padding:20px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
 .card{background:#1e293b;border-radius:10px;padding:15px}
 button{padding:8px;border:none;border-radius:5px;cursor:pointer}
 .cart-btn{background:#22c55e}
@@ -20,7 +20,7 @@ button{padding:8px;border:none;border-radius:5px;cursor:pointer}
 .remove-btn{background:red;color:white;margin-left:10px}
 .hidden{display:none}
 input,textarea{width:100%;padding:8px;margin:5px 0}
-.summary{max-height:200px;overflow:auto;font-size:14px;line-height:1.6;color:#cbd5e1}
+.summary{max-height:250px;overflow:auto;font-size:14px;line-height:1.7;color:#cbd5e1}
 </style>
 </head>
 
@@ -40,23 +40,52 @@ input,textarea{width:100%;padding:8px;margin:5px 0}
 <div class="grid">
 
 <div class="card">
-<h3>Weapon 1: Rise Before Ruin</h3>
+<h3>📖 Weapon 1: Rise Before Ruin</h3>
+
 <p class="summary">
-A boy with no direction... chosen as a Satya Yoddha to stop a rising force tied to Ravana. Alongside Dharma and Sree, he uncovers corruption of religion and power. In a final war in Lanka, everything is tested—and when truth falls, something greater rises.
+A boy with no ambition, no discipline, and no direction walks into a silent forest—unaware that this single step will change not only his life, but the balance of the world itself. Satyapal has always lived without purpose, drifting through life without responsibility, until fate chooses him for something far greater than he ever imagined.
+
+<br><br>
+
+Chosen as a <b>Satya Yoddha</b>, he becomes one of three warriors destined to confront a rising force linked to the ancient power of Ravana. But this is not a tale of heroes born strong. It is a story of ordinary individuals forced into extraordinary roles.
+
+<br><br>
+
+Along the way, he meets Dharma and Sree—two warriors shaped by pain, belief, and survival. Together, they uncover a dangerous truth: religion is being corrupted, power is being misused, and truth is being silenced.
+
+<br><br>
+
+As the war escalates, sacrifices become inevitable. In a final battle in Lanka, everything is pushed to its limit—and when truth itself falls, something greater rises.
 </p>
+
 <p>₹470</p>
 <input type="number" value="1" id="q1">
-<button class="cart-btn" onclick="addCart('Weapon 1',470,'q1')">Add</button>
+<button class="cart-btn" onclick="addCart('Weapon 1',470,'q1')">Add to Cart</button>
 </div>
 
+
 <div class="card">
-<h3>Empire Of Football</h3>
+<h3>⚽ Empire Of Football</h3>
+
 <p class="summary">
-Football is history, identity, and rivalry. From its origins to global dominance, this book explores the legendary clash between FC Barcelona and Real Madrid—and the mindset required to build greatness.
+Football is more than a game—it is identity, emotion, and legacy. <em>Empire Of Football</em> explores the rise of the world’s most powerful sport, from its origins to global dominance.
+
+<br><br>
+
+At the heart of this story lies one of the greatest rivalries: FC Barcelona vs Real Madrid. This is not just a match—it is a clash of philosophies.
+
+<br><br>
+
+Barcelona represents unity, creativity, and beautiful football. Real Madrid represents power, ambition, and an unstoppable winning mentality.
+
+<br><br>
+
+Through legendary players and historic moments, this book reveals how these two giants shaped football—and how mindset defines success, both on and off the field.
 </p>
+
 <p>₹470</p>
 <input type="number" value="1" id="q2">
-<button class="cart-btn" onclick="addCart('Empire Of Football',470,'q2')">Add</button>
+<button class="cart-btn" onclick="addCart('Empire Of Football',470,'q2')">Add to Cart</button>
 </div>
 
 </div>
@@ -100,7 +129,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getFirestore, collection, addDoc, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-// 🔥 YOUR FIREBASE CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyD8twHB8Hn4ssqvVwVDMQinJ-m_Iyfrqh4",
   authDomain: "shreegurubooks-cbca0.firebaseapp.com",
@@ -114,65 +142,56 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// CART
 let cart = JSON.parse(localStorage.getItem('cart')) || [];
 updateCount();
 
-window.addCart = function(name,price,id){
+window.addCart=function(name,price,id){
 let qty=parseInt(document.getElementById(id).value);
 cart.push({name,price,qty});
-save();
-alert("Added to cart");
-};
-
-function save(){
 localStorage.setItem('cart',JSON.stringify(cart));
 updateCount();
-}
+alert("Added");
+};
 
 function updateCount(){
 document.getElementById('count').innerText=cart.length;
 }
 
-// NAV
 window.showCart=()=>{
-document.getElementById('shop').classList.add('hidden');
-document.getElementById('cartPage').classList.remove('hidden');
+shop.classList.add('hidden');
+cartPage.classList.remove('hidden');
 renderCart();
 };
 
 window.showShop=()=>location.reload();
 
 window.showLogin=()=>{
-document.getElementById('shop').classList.add('hidden');
-document.getElementById('loginPage').classList.remove('hidden');
+shop.classList.add('hidden');
+loginPage.classList.remove('hidden');
 };
 
-// CART
 function renderCart(){
 let list=document.getElementById('cartList');
 list.innerHTML="";
 let total=0;
 
-cart.forEach((item,index)=>{
-list.innerHTML+=`
-<li>${item.name} x ${item.qty}
-<button class="remove-btn" onclick="removeItem(${index})">Remove</button>
-</li>`;
-total+=item.price*item.qty;
+cart.forEach((i,idx)=>{
+list.innerHTML+=`<li>${i.name} x ${i.qty}
+<button class="remove-btn" onclick="removeItem(${idx})">Remove</button></li>`;
+total+=i.price*i.qty;
 });
 
 document.getElementById('total').innerText="Total ₹"+total;
 }
 
-window.removeItem=function(i){
+window.removeItem=(i)=>{
 cart.splice(i,1);
-save();
+localStorage.setItem('cart',JSON.stringify(cart));
 renderCart();
+updateCount();
 };
 
-// 💳 PAYMENT
-window.payNow = async function(){
+window.payNow=async function(){
 
 if(cart.length===0){alert("Cart empty");return;}
 
@@ -187,7 +206,6 @@ if(human.toLowerCase()!=="yes"){alert("Type YES");return;}
 
 let total=cart.reduce((t,i)=>t+i.price*i.qty,0);
 
-// save first
 let ref=await addDoc(collection(db,"orders"),{
 name,phone,email,address,items:cart,total,status:"pending"
 });
@@ -219,28 +237,20 @@ await updateDoc(doc(db,"orders",ref.id),{status:"cancelled"});
 new Razorpay(options).open();
 };
 
-// LOGIN
-window.login=async ()=>{
-await signInWithEmailAndPassword(auth,adminUser.value,adminPass.value)
-.catch(()=>alert("Login failed"));
-};
+window.login=()=>signInWithEmailAndPassword(auth,adminUser.value,adminPass.value);
 
-// ADMIN
-onAuthStateChanged(auth,async(user)=>{
-if(user){
+onAuthStateChanged(auth,async(u)=>{
+if(u){
 loginPage.classList.add('hidden');
 adminPage.classList.remove('hidden');
 
 let list=document.getElementById('orders');
 list.innerHTML="";
+let snap=await getDocs(collection(db,"orders"));
 
-const snap=await getDocs(collection(db,"orders"));
 snap.forEach(d=>{
 let o=d.data();
-list.innerHTML+=`
-<li>
-<b>${o.name}</b> - ₹${o.total} - ${o.status}
-</li><hr>`;
+list.innerHTML+=`<li>${o.name} - ₹${o.total} - ${o.status}</li><hr>`;
 });
 }
 });
