@@ -9,18 +9,16 @@
 
 <style>
 body{font-family:Arial;background:#0b0f1a;color:#fff;margin:0}
-header{background:#020617;padding:15px 30px;display:flex;justify-content:space-between}
+header{background:#020617;padding:15px;display:flex;justify-content:space-between}
 nav span{margin-left:15px;cursor:pointer}
 .container{padding:20px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
-.card{background:#1e293b;border-radius:10px;padding:15px}
+.card{background:#1e293b;padding:15px;border-radius:10px;margin-bottom:15px}
 button{padding:8px;border:none;border-radius:5px;cursor:pointer}
 .cart-btn{background:#22c55e}
-.buy-btn{background:#3b82f6;color:white}
-.remove-btn{background:red;color:white;margin-left:10px}
+.buy-btn{background:#3b82f6;color:#fff}
 .hidden{display:none}
 input,textarea{width:100%;padding:8px;margin:5px 0}
-.summary{max-height:250px;overflow:auto;font-size:14px;line-height:1.7;color:#cbd5e1}
+#cartPage{max-height:80vh;overflow:auto}
 </style>
 </head>
 
@@ -37,7 +35,6 @@ input,textarea{width:100%;padding:8px;margin:5px 0}
 
 <!-- SHOP -->
 <div class="container" id="shop">
-<div class="grid">
 
 <div class="card">
 <div class="container" id="shop">
@@ -129,16 +126,13 @@ In the end, football is not just played—it is lived. It is felt in every pass,
 </div>
 </div>
 
-</div>
-</div>
-
 <!-- CART -->
 <div class="container hidden" id="cartPage">
 <h2>Your Cart</h2>
 <ul id="cartList"></ul>
 <h3 id="total"></h3>
 
-<p style="color:yellow;">⚠️ Pre-order: Delivery takes 3–4 weeks</p>
+<p style="color:yellow;">Delivery: 3–4 weeks</p>
 
 <input id="name" placeholder="Name">
 <input id="phone" placeholder="Phone">
@@ -170,89 +164,89 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getFirestore, collection, addDoc, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
+// 🔥 YOUR FIREBASE
 const firebaseConfig = {
   apiKey: "AIzaSyD8twHB8Hn4ssqvVwVDMQinJ-m_Iyfrqh4",
   authDomain: "shreegurubooks-cbca0.firebaseapp.com",
-  projectId: "shreegurubooks-cbca0",
-  storageBucket: "shreegurubooks-cbca0.firebasestorage.app",
-  messagingSenderId: "924681533835",
-  appId: "1:924681533835:web:4fe2a7b4b60974625dd78e"
+  projectId: "shreegurubooks-cbca0"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-let cart = JSON.parse(localStorage.getItem('cart')) || [];
+// CART
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
 updateCount();
 
-window.addCart=function(name,price,id){
+window.addCart = function(name,price,id){
 let qty=parseInt(document.getElementById(id).value);
 cart.push({name,price,qty});
-localStorage.setItem('cart',JSON.stringify(cart));
+localStorage.setItem("cart",JSON.stringify(cart));
 updateCount();
-alert("Added");
+alert("Added!");
 };
 
 function updateCount(){
-document.getElementById('count').innerText=cart.length;
+document.getElementById("count").innerText=cart.length;
 }
 
-window.showCart=()=>{
-shop.classList.add('hidden');
-cartPage.classList.remove('hidden');
-renderCart();
-};
+// NAVIGATION
+function hideAll(){
+document.getElementById("shop").classList.add("hidden");
+document.getElementById("cartPage").classList.add("hidden");
+document.getElementById("loginPage").classList.add("hidden");
+document.getElementById("adminPage").classList.add("hidden");
+}
 
-window.showShop=()=>location.reload();
+window.showShop=()=>{hideAll();document.getElementById("shop").classList.remove("hidden");};
+window.showCart=()=>{hideAll();document.getElementById("cartPage").classList.remove("hidden");renderCart();};
+window.showLogin=()=>{hideAll();document.getElementById("loginPage").classList.remove("hidden");};
 
-window.showLogin=()=>{
-shop.classList.add('hidden');
-loginPage.classList.remove('hidden');
-};
-
+// CART
 function renderCart(){
-let list=document.getElementById('cartList');
+let list=document.getElementById("cartList");
 list.innerHTML="";
 let total=0;
 
 cart.forEach((i,idx)=>{
-list.innerHTML+=`<li>${i.name} x ${i.qty}
-<button class="remove-btn" onclick="removeItem(${idx})">Remove</button></li>`;
+list.innerHTML+=`<li>${i.name} x ${i.qty} <button onclick="removeItem(${idx})">❌</button></li>`;
 total+=i.price*i.qty;
 });
 
-document.getElementById('total').innerText="Total ₹"+total;
+document.getElementById("total").innerText="Total ₹"+total;
 }
 
-window.removeItem=(i)=>{
+window.removeItem=function(i){
 cart.splice(i,1);
-localStorage.setItem('cart',JSON.stringify(cart));
+localStorage.setItem("cart",JSON.stringify(cart));
 renderCart();
 updateCount();
 };
 
+// PAYMENT
 window.payNow=async function(){
 
 if(cart.length===0){alert("Cart empty");return;}
 
-let name=nameInput.value;
-let phone=phoneInput.value;
-let email=emailInput.value;
-let address=addressInput.value;
-let human=humanInput.value;
+let name=document.getElementById("name").value;
+let phone=document.getElementById("phone").value;
+let email=document.getElementById("email").value;
+let address=document.getElementById("address").value;
+let human=document.getElementById("human").value;
 
 if(!name||!phone||!email||!address){alert("Fill all");return;}
 if(human.toLowerCase()!=="yes"){alert("Type YES");return;}
 
 let total=cart.reduce((t,i)=>t+i.price*i.qty,0);
 
+// SAVE ORDER FIRST
 let ref=await addDoc(collection(db,"orders"),{
 name,phone,email,address,items:cart,total,status:"pending"
 });
 
 var options={
-key:"rzp_live_SewkzVVKnvjFTI",
+key:"YOUR_RAZORPAY_KEY",
 amount:total*100,
 currency:"INR",
 name:"ShreeGuru Books",
@@ -265,7 +259,8 @@ status:"paid",paymentId:res.razorpay_payment_id
 let msg=`Order Confirmed%0AName:${name}%0APhone:${phone}%0ATotal:₹${total}`;
 window.location.href=`https://wa.me/919886447999?text=${msg}`;
 
-cart=[];localStorage.removeItem("cart");
+cart=[];
+localStorage.removeItem("cart");
 },
 
 modal:{
@@ -278,17 +273,26 @@ await updateDoc(doc(db,"orders",ref.id),{status:"cancelled"});
 new Razorpay(options).open();
 };
 
-window.login=()=>signInWithEmailAndPassword(auth,adminUser.value,adminPass.value);
+// LOGIN
+window.login=async ()=>{
+try{
+await signInWithEmailAndPassword(auth,
+document.getElementById("adminUser").value,
+document.getElementById("adminPass").value
+);
+}catch(e){alert("Login failed");}
+};
 
-onAuthStateChanged(auth,async(u)=>{
-if(u){
-loginPage.classList.add('hidden');
-adminPage.classList.remove('hidden');
+// ADMIN
+onAuthStateChanged(auth,async(user)=>{
+if(user){
+hideAll();
+document.getElementById("adminPage").classList.remove("hidden");
 
-let list=document.getElementById('orders');
+let list=document.getElementById("orders");
 list.innerHTML="";
-let snap=await getDocs(collection(db,"orders"));
 
+const snap=await getDocs(collection(db,"orders"));
 snap.forEach(d=>{
 let o=d.data();
 list.innerHTML+=`<li>${o.name} - ₹${o.total} - ${o.status}</li><hr>`;
