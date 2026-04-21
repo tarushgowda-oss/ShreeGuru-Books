@@ -20,6 +20,7 @@ button{padding:8px;border:none;border-radius:5px;cursor:pointer}
 .remove-btn{background:red;color:white;margin-left:10px}
 .hidden{display:none}
 input,textarea{width:100%;padding:8px;margin:5px 0}
+.summary{max-height:200px;overflow:auto;font-size:14px;line-height:1.6;color:#cbd5e1}
 </style>
 </head>
 
@@ -39,75 +40,23 @@ input,textarea{width:100%;padding:8px;margin:5px 0}
 <div class="grid">
 
 <div class="card">
-<h3>Empire Of Football</h3>
-
-<p style="color:#22c55e;">
-⚽ A story of history, rivalry, and the making of football empires.
+<h3>Weapon 1: Rise Before Ruin</h3>
+<p class="summary">
+A boy with no direction... chosen as a Satya Yoddha to stop a rising force tied to Ravana. Alongside Dharma and Sree, he uncovers corruption of religion and power. In a final war in Lanka, everything is tested—and when truth falls, something greater rises.
 </p>
-
-<p style="font-size:14px; line-height:1.6; color:#cbd5e1;">
-Football is more than a game—it is history, rivalry, and identity.
-
-<br><br>
-
-<em>Empire Of Football</em> takes you through the evolution of the world’s greatest sport, from its origins in England to becoming a global phenomenon. But this is not just about history—it is about the empires built within the game.
-
-<br><br>
-
-At the heart of this story lies one of the greatest rivalries in football history: <b>FC Barcelona</b> vs <b>Real Madrid</b>.
-
-<br><br>
-
-Barcelona represents philosophy, identity, and beautiful football—built on belief and unity. Real Madrid represents power, dominance, and a relentless winning mentality.
-
-<br><br>
-
-Through legendary players, unforgettable matches, and defining moments, this journey explores how these two giants shaped football into what it is today.
-
-<br><br>
-
-<b>This is not just a story about football.</b><br>
-It is about legacy, rivalry, and the mindset required to build an empire.
-</p>
-
 <p>₹470</p>
-<p style="color:orange;font-size:14px;">
-⏳ Delivery time: 3–4 weeks (Pre-order)
-</p>
 <input type="number" value="1" id="q1">
-<button class="cart-btn" onclick="addCart('Empire Of Football',470,'q1')">Add</button>
+<button class="cart-btn" onclick="addCart('Weapon 1',470,'q1')">Add</button>
 </div>
 
 <div class="card">
-<h3>Weapon 1: Rise Before Ruin</h3>
-
-<p style="font-size:14px; line-height:1.6; color:#cbd5e1;">
-A lazy boy with no purpose walks into a silent forest—and unknowingly steps into a war that threatens the balance of the world.
-
-<br><br>
-
-Satyapal is chosen as a <b>Satya Yoddha</b>, one of three warriors destined to stop a rising force tied to the ancient power of Ravana. But this is not a story of heroes born strong—it is about ordinary people forced to become extraordinary.
-
-<br><br>
-
-He is joined by Dharma, a man who has lost faith but not his courage, and Sree, a silent and deadly fighter who acts without fear. Together, they uncover a dangerous truth: religion is being corrupted, power is being misused, and those who speak the truth are being erased.
-
-<br><br>
-
-As their journey turns deadly, sacrifices become inevitable. In a final war in Lanka, everything is pushed to its limit. And when truth itself falls… something greater rises.
-
-<br><br>
-
-<b>This is not just a story.</b><br>
-It is a battle between truth, power, and balance—where not everyone survives, but every choice changes the world.
+<h3>Empire Of Football</h3>
+<p class="summary">
+Football is history, identity, and rivalry. From its origins to global dominance, this book explores the legendary clash between FC Barcelona and Real Madrid—and the mindset required to build greatness.
 </p>
-
 <p>₹470</p>
-<p style="color:orange;font-size:14px;">
-⏳ Delivery time: 3–4 weeks (Pre-order)
-</p>
 <input type="number" value="1" id="q2">
-<button class="cart-btn" onclick="addCart('Weapon 1: Rise Before Ruin',470,'q2')">Add</button>
+<button class="cart-btn" onclick="addCart('Empire Of Football',470,'q2')">Add</button>
 </div>
 
 </div>
@@ -119,7 +68,8 @@ It is a battle between truth, power, and balance—where not everyone survives, 
 <ul id="cartList"></ul>
 <h3 id="total"></h3>
 
-<h3>Customer Details</h3>
+<p style="color:yellow;">⚠️ Pre-order: Delivery takes 3–4 weeks</p>
+
 <input id="name" placeholder="Name">
 <input id="phone" placeholder="Phone">
 <input id="email" placeholder="Email">
@@ -147,10 +97,10 @@ It is a battle between truth, power, and balance—where not everyone survives, 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-// FIREBASE CONFIG
+// 🔥 YOUR FIREBASE CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyD8twHB8Hn4ssqvVwVDMQinJ-m_Iyfrqh4",
   authDomain: "shreegurubooks-cbca0.firebaseapp.com",
@@ -198,7 +148,7 @@ document.getElementById('shop').classList.add('hidden');
 document.getElementById('loginPage').classList.remove('hidden');
 };
 
-// CART RENDER
+// CART
 function renderCart(){
 let list=document.getElementById('cartList');
 list.innerHTML="";
@@ -206,8 +156,7 @@ let total=0;
 
 cart.forEach((item,index)=>{
 list.innerHTML+=`
-<li>
-${item.name} x ${item.qty}
+<li>${item.name} x ${item.qty}
 <button class="remove-btn" onclick="removeItem(${index})">Remove</button>
 </li>`;
 total+=item.price*item.qty;
@@ -216,70 +165,54 @@ total+=item.price*item.qty;
 document.getElementById('total').innerText="Total ₹"+total;
 }
 
-// REMOVE
-window.removeItem=function(index){
-cart.splice(index,1);
+window.removeItem=function(i){
+cart.splice(i,1);
 save();
 renderCart();
 };
 
-// PAYMENT + WHATSAPP FULL DETAILS
-window.payNow=async function(){
+// 💳 PAYMENT
+window.payNow = async function(){
 
-let name=document.getElementById("name").value;
-let phone=document.getElementById("phone").value;
-let email=document.getElementById("email").value;
-let address=document.getElementById("address").value;
-let human=document.getElementById("human").value;
+if(cart.length===0){alert("Cart empty");return;}
 
-if(!name||!phone||!email||!address){
-alert("Fill all details"); return;
-}
-if(human.toLowerCase()!=="yes"){
-alert("Type YES"); return;
-}
+let name=nameInput.value;
+let phone=phoneInput.value;
+let email=emailInput.value;
+let address=addressInput.value;
+let human=humanInput.value;
 
-let totalAmount = cart.reduce((t,i)=>t+i.price*i.qty,0);
+if(!name||!phone||!email||!address){alert("Fill all");return;}
+if(human.toLowerCase()!=="yes"){alert("Type YES");return;}
+
+let total=cart.reduce((t,i)=>t+i.price*i.qty,0);
+
+// save first
+let ref=await addDoc(collection(db,"orders"),{
+name,phone,email,address,items:cart,total,status:"pending"
+});
 
 var options={
 key:"rzp_live_SewkzVVKnvjFTI",
-amount: totalAmount * 100,
+amount:total*100,
 currency:"INR",
 name:"ShreeGuru Books",
 
-handler: async function(res){
-
-await addDoc(collection(db,"orders"),{
-name,phone,email,address,
-items:cart,
-total: totalAmount,
-paymentId:res.razorpay_payment_id
+handler:async function(res){
+await updateDoc(doc(db,"orders",ref.id),{
+status:"paid",paymentId:res.razorpay_payment_id
 });
 
-// 📲 WhatsApp message
-let orderDetails = cart.map(i => `${i.name} x ${i.qty}`).join("%0A");
+let msg=`Order Confirmed%0AName:${name}%0APhone:${phone}%0ATotal:₹${total}`;
+window.location.href=`https://wa.me/919886447999?text=${msg}`;
 
-let msg = `📚 *ShreeGuru Books Order*%0A
-------------------------%0A
-👤 Name: ${name}%0A
-📞 Phone: ${phone}%0A
-📧 Email: ${email}%0A
-🏠 Address: ${address}%0A
-------------------------%0A
-📦 Items:%0A${orderDetails}%0A
-------------------------%0A
-💰 Total: ₹${totalAmount}%0A
-🧾 Payment ID: ${res.razorpay_payment_id}%0A
-------------------------%0A
-✅ Payment Completed`;
+cart=[];localStorage.removeItem("cart");
+},
 
-window.open(`https://wa.me/919886447999?text=${msg}`);
-
-alert("Order placed successfully!");
-
-cart=[];
-save();
-location.reload();
+modal:{
+ondismiss:async function(){
+await updateDoc(doc(db,"orders",ref.id),{status:"cancelled"});
+}
 }
 };
 
@@ -288,32 +221,30 @@ new Razorpay(options).open();
 
 // LOGIN
 window.login=async ()=>{
-try{
-await signInWithEmailAndPassword(auth,
-document.getElementById("adminUser").value,
-document.getElementById("adminPass").value
-);
-}catch(e){alert("Login failed");}
+await signInWithEmailAndPassword(auth,adminUser.value,adminPass.value)
+.catch(()=>alert("Login failed"));
 };
 
 // ADMIN
-onAuthStateChanged(auth, async (user)=>{
+onAuthStateChanged(auth,async(user)=>{
 if(user){
-document.getElementById('loginPage').classList.add('hidden');
-document.getElementById('adminPage').classList.remove('hidden');
+loginPage.classList.add('hidden');
+adminPage.classList.remove('hidden');
 
 let list=document.getElementById('orders');
 list.innerHTML="";
 
 const snap=await getDocs(collection(db,"orders"));
-snap.forEach(doc=>{
-let o=doc.data();
-list.innerHTML+=`<li>${o.name} - ₹${o.total} - ${o.paymentId}</li>`;
+snap.forEach(d=>{
+let o=d.data();
+list.innerHTML+=`
+<li>
+<b>${o.name}</b> - ₹${o.total} - ${o.status}
+</li><hr>`;
 });
 }
 });
 
-// LOGOUT
 window.logout=()=>signOut(auth);
 
 </script>
